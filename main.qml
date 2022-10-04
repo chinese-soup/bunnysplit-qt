@@ -7,10 +7,11 @@ Window {
     width: 360
     height: 600
     visible: true
-    title: qsTr("Hello World")
+    title: qsTr("Bunnysplit-Linux")
     flags: Qt.WindowTitleHint
 
     property QtObject backend
+    property QtObject backend2
 
     Material.theme: Material.Light
     Material.accent: Material.Purple

@@ -4,40 +4,60 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1
 import QtQuick.Shapes 1.4
 
-RowLayout
+
+GridLayout
 {
     //spacing: 150
     anchors.fill: parent
-    property string current_time: "0"
-    property string model_name: "iPhone ??"
-    property variant mrdka;
-    property variant lockdownFailed;
-    property variant ioregFailed;
 
     Connections {
         target: backend
+
         function onUpdated(msg) {
-            current_time = msg["current_time"]
-            console.log(current_time)
-        }
-    }
+            // current_time_property = msg["curr_time"]
+            //console.log(msg["curr_time"])
+            //console.log(msg["splits_data"][0])
+            console.log(backend.get_splits.length)
+            console.log(backend.get_splits)
 
-    Rectangle {
-        //Layout.preferredWidth: parent.width / 2
-        Layout.fillHeight: true
-        id: leftSide
+            console.log(msg.get_splits)
 
-        //anchors.leftMargin: 50
-        color: "blue"
-        ColumnLayout {
-            Text {
-                id: timer_text
-                Layout.alignment: Qt.AlignLeft
-                text: "Time " + current_time
-                font.pixelSize: 24
-                color: gradient2
-                palette: labelPal
+            for(var property in msg)
+            {
+                console.log(property)
             }
         }
     }
+
+    GridLayout {
+        columns: 1
+        Rectangle {
+            //Layout.preferredWidth: parent.width / 2
+            color: "blue"
+            id: leftSide
+
+            //anchors.leftMargin: 50
+            ColumnLayout {
+                Text {
+                    id: current_time
+                    Layout.alignment: Qt.AlignLeft
+                    text: backend.curr_time_getter
+                    font.pixelSize: 36
+                }
+            }
+        }
+
+        Repeater {
+            id: repeater3
+            model: backend.get_splits
+
+            delegate: RowSplit {
+                title: modelData.title
+                best_time: modelData.best_time
+           }
+        }
+    }
+
 }
+
+

@@ -2,6 +2,7 @@
 # Built-ins
 import sys
 import datetime
+import time
 
 # IPC-related
 from ipcqueue.serializers import RawSerializer
@@ -30,18 +31,38 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QTimer, QObject, Signal, Slot
+from PySide6.QtCore import QTimer, QObject, Signal, Slot, Property
 from PySide6.QtCore import QRunnable, Slot, QThreadPool
 
 
 @dataclass
-class Split:
+class Split(QObject):
+    mrdat = Signal(name="mrdat2")
     title: str
     time: str
     best_time: str
     best_segment: str
     identifier: int = field(default_factory=count().__next__)
 
+    @Property(str, notify=mrdat)
+    def get_title(self):
+        return self.title
+
+    @Property(str)
+    def get_time(self):
+        return self.time
+
+    @Property(str)
+    def get_best_time(self):
+        return self.best_time
+
+    @Property(str)
+    def get_best_segment(self):
+        return self.best_segment
+
+    @Property(str)
+    def get_identifier(self):
+        return self.identifier
 
 @dataclass
 class Splits(JSONWizard):
@@ -95,40 +116,57 @@ class Worker(QRunnable):
 
         q1 = posixmq.Queue("/bxt", serializer=RawSerializer, maxsize=5000, maxmsgsize=50000)
         while True:
-            while q1.qsize() > 0:
+            if q1.qsize() > 0:
                 try:
                     msg = q1.get_nowait()
                     print(msg)
+                    bsp.parse_message(msg)
                     self.signals.result.emit(msg)
                 except posixmq.QueueError as e:
-                    pass
-
-
+                    print("Exception")
+            else:
+                time.sleep(0.01) # CPU usage, be gone
 
 
 class BunnysplitShit(QObject):
-    updated = Signal("QVariantMap")
+    updated = Signal(QObject)
+    #updated = Signal("QVariantMap")
+    current_time_changed = Signal(name="currentTimeChanged")
 
     def emit_signal(self):
         # Pass the current time to QML.
         # curr_time = strftime("%H:%M:%S", localtime())
-        print(f"Emitting {self.data}")
-        self.data["current_time"] = self.curr_time
-        if self.data:
-            self.updated.emit(self.data)
-        else:
-            self.updated.emit(self.data)
+        # self.updated.emit(self)
+        print("Emitting self.__dict__")
+        self.updated.emit(self)
+        self.current_time_changed.emit()
+
+    # TODO: https://doc.qt.io/qtforpython/PySide6/QtCore/Property.html
+    @Property(float, notify=current_time_changed)
+    def curr_time_getter(self):
+        return self.curr_time
+
+    # @Property(list)
+    #@Slot(result="QVariantList")
+    @Property("QVariantList", notify=current_time_changed)
+    def get_splits(self):
+        splits_as_list = [x.__dict__ for x in self.splits_data.splits]
+        return splits_as_list
 
     def __init__(self):
         super().__init__()
         self.timer_stared = False
-        self.curr_time = 0
+        self.curr_time = 0.0
         self.curr_split = 0
         self.already_visited_maps = []
-        self.data = {"current_time": 0.0}
 
         with open("splits.example.json") as f:
-            self.splits = Splits.from_json(f.read())
+            #self.splits_data = [Split(title="ba_security1", best_segment="asdf", best_time="asdf", time="WOW"),
+             #                   Split(title="ba_security2", best_segment="asdf", best_time="asdf", time="WOW")]
+
+            self.splits_data = Splits.from_json(f.read())
+
+        self.emit_signal()
 
     def timedelta_to_timestring(self) -> str:
         """
@@ -157,9 +195,9 @@ class BunnysplitShit(QObject):
         # print(MessageType.TIME.value)
 
         # print(f"\033[%d;%dH Current time: {self.curr_time}" % (0, 0))
-        print(f"DEBUG: Current time: {self.curr_time}")
-        print(f"DEBUG: Current split: {self.splits.splits[self.curr_split]}")
-        print(f"DEBUG: Already visited maps: {self.already_visited_maps}")
+        #print(f"DEBUG: Current time: {self.curr_time}")
+        #print(f"DEBUG: Current split: {self.splits_data.splits[self.curr_split]}")
+        #print(f"DEBUG: Already visited maps: {self.already_visited_maps}")
 
         if data[1] == MessageType.TIME.value:
             print("Time", data)
@@ -193,21 +231,25 @@ class BunnysplitShit(QObject):
             if mapname in self.already_visited_maps:
                 pass
 
-            elif self.splits.splits[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
-                self.already_visited_maps.append(self.splits.splits[self.curr_split].title)
+            elif self.splits_data.splits[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
+            # elif self.splits_data[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
+                self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
                 self.curr_split += 1
 
-            elif self.splits.splits[self.curr_split + 1].title == mapname \
-                    and self.splits.splits[self.curr_split].title not in self.already_visited_maps:
-                self.already_visited_maps.append(self.splits.splits[self.curr_split].title)
+            #elif self.splits_data[self.curr_split + 1].title == mapname \
+             #       and self.splits_data[self.curr_split].title not in self.already_visited_maps:
+            elif self.splits_data.splits[self.curr_split + 1].title == mapname \
+                 and self.splits_data.splits[self.curr_split].title not in self.already_visited_maps:
+                self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
                 self.curr_split += 1
 
-            print(self.curr_time)
-            print(self.splits.splits[self.curr_split])
-            print(self.curr_split)
+
+            # print(self.curr_time)
+            # print(self.splits_data.splits[self.curr_split])
+            # print(self.curr_split)
 
         elif event_type == EventType.TIMER_RESET.value:
-            self.reset_timer()
+            self.reset_timer() # TOOD: Reload the JSON file?
 
         elif event_type == EventType.TIMER_START.value:
             self.timer_started = True
@@ -233,6 +275,7 @@ if __name__ == "__main__":
 
     QQuickStyle.setStyle("Material")
     app = QGuiApplication(sys.argv)
+
     engine = QQmlApplicationEngine()
     qml_file = str(Path(__file__).resolve().parent / "main.qml")
     engine.load(qml_file)
@@ -241,12 +284,14 @@ if __name__ == "__main__":
     #backend = Backend()
 
     engine.rootObjects()[0].setProperty('backend', bsp)
+    engine.rootContext().setContextProperty('backend2', bsp.splits_data)
 
     # Initial call to trigger first update. Must be after the setProperty to connect signals.
     # backend.emit_signal()"""
 
     if not engine.rootObjects():
         sys.exit(-1)
+
     worker = Worker()
     threadpool = QThreadPool()
     threadpool.start(worker)

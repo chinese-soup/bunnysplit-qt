@@ -1,30 +1,32 @@
 {
   "title": "Half-Life Blue Shift",
-  "category": "Rta",
+  "category": "Scriptless RTA",
+  "attempt_count": 0,
+  "finished_runs_count": 0,
   "splits": [
     {
       "title": "ba_security1",
-      "time": "00:00.100735",
-      "best_time": "00:00.100735",
-      "best_segment": "00:00.100735"
+      "time": "00:00.100",
+      "best_time": "00:00.100",
+      "best_segment": "00:00.100"
     },
     {
       "title": "ba_security2",
-      "time": "00:00.934210",
-      "best_time": "14:16.933388",
-      "best_segment": "2:35.819681"
+      "time": "00:00.934",
+      "best_time": "14:16.933",
+      "best_segment": "2:35.819"
     },
     {
       "title": "ba_maint",
-      "time": "17:51.600311",
-      "best_time": "17:26.241850",
-      "best_segment": "3:08.843658"
+      "time": "17:51.600",
+      "best_time": "17:26.241",
+      "best_segment": "3:08.843"
     },
     {
       "title": "ba_adkgafhgfd",
-      "time": "23:52.151789",
-      "best_time": "23:52.151789",
-      "best_segment": "5:54.446978"
+      "time": "23:52.151",
+      "best_time": "23:52.151",
+      "best_segment": "5:54.446"
     }
   ]
 }

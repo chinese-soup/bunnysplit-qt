@@ -21,31 +21,34 @@ GridLayout
             console.log(backend.get_splits)
 
             console.log(msg.get_splits)
+            console.log(backend.timer_state_getter)
 
-            for(var property in msg)
+            /*for(var property in msg)
             {
                 console.log(property)
+            }*/
+
+        }
+    }
+    Rectangle {
+        //Layout.preferredWidth: parent.width / 2
+        color: "blue"
+        id: leftSide
+
+        //anchors.leftMargin: 50
+        ColumnLayout {
+            Text {
+                id: current_time
+                Layout.alignment: Qt.AlignLeft
+                text: backend.curr_time_getter
+                font.pixelSize: 36
+                color: backend.timer_state_getter ? 'green' : 'black'
             }
         }
     }
-
     GridLayout {
         columns: 1
-        Rectangle {
-            //Layout.preferredWidth: parent.width / 2
-            color: "blue"
-            id: leftSide
 
-            //anchors.leftMargin: 50
-            ColumnLayout {
-                Text {
-                    id: current_time
-                    Layout.alignment: Qt.AlignLeft
-                    text: backend.curr_time_getter
-                    font.pixelSize: 36
-                }
-            }
-        }
 
         Repeater {
             id: repeater3
@@ -53,7 +56,8 @@ GridLayout
 
             delegate: RowSplit {
                 title: modelData.title
-                best_time: modelData.best_time
+                best_time: modelData.time
+                current_split: backend.curr_split_index_getter == index
            }
         }
     }

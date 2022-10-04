@@ -37,32 +37,32 @@ from PySide6.QtCore import QRunnable, Slot, QThreadPool
 
 @dataclass
 class Split(QObject):
-    mrdat = Signal(name="mrdat2")
     title: str
     time: str
     best_time: str
     best_segment: str
+
     identifier: int = field(default_factory=count().__next__)
 
-    @Property(str, notify=mrdat)
-    def get_title(self):
-        return self.title
-
-    @Property(str)
-    def get_time(self):
-        return self.time
-
-    @Property(str)
-    def get_best_time(self):
-        return self.best_time
-
-    @Property(str)
-    def get_best_segment(self):
-        return self.best_segment
-
-    @Property(str)
-    def get_identifier(self):
-        return self.identifier
+    # @Property(str, notify=mrdat)
+    # def get_title(self):
+    #     return self.title
+    #
+    # @Property(str)
+    # def get_time(self):
+    #     return self.time
+    #
+    # @Property(str)
+    # def get_best_time(self):
+    #     return self.best_time
+    #
+    # @Property(str)
+    # def get_best_segment(self):
+    #     return self.best_segment
+    #
+    # @Property(str)
+    # def get_identifier(self):
+    #     return self.identifier
 
 @dataclass
 class Splits(JSONWizard):
@@ -98,9 +98,9 @@ class WorkerSignals(QObject):
 
 
 class Worker(QRunnable):
-    '''
+    """
     Worker thread
-    '''
+    """
     def __init__(self, *args, **kwargs):
         super(Worker, self).__init__()
         # Store constructor arguments (re-used for processing)
@@ -110,11 +110,11 @@ class Worker(QRunnable):
 
     @Slot()  # QtCore.Slot
     def run(self):
-        '''
+        """
         Your code goes in this function
-        '''
+        """
 
-        q1 = posixmq.Queue("/bxt", serializer=RawSerializer, maxsize=5000, maxmsgsize=50000)
+        q1 = posixmq.Queue("/bxt", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
         while True:
             if q1.qsize() > 0:
                 try:
@@ -146,6 +146,17 @@ class BunnysplitShit(QObject):
     def curr_time_getter(self):
         return self.curr_time
 
+    @Property(float, notify=current_time_changed)
+    def curr_split_index_getter(self):
+        if self.timer_started:
+            return self.curr_split
+        else:
+            return -1
+
+    @Property(bool, notify=current_time_changed) #TODO: int (enum)
+    def timer_state_getter(self):
+        return self.timer_started
+
     # @Property(list)
     #@Slot(result="QVariantList")
     @Property("QVariantList", notify=current_time_changed)
@@ -155,15 +166,12 @@ class BunnysplitShit(QObject):
 
     def __init__(self):
         super().__init__()
-        self.timer_stared = False
+        self.timer_started = False
         self.curr_time = 0.0
         self.curr_split = 0
         self.already_visited_maps = []
 
         with open("splits.example.json") as f:
-            #self.splits_data = [Split(title="ba_security1", best_segment="asdf", best_time="asdf", time="WOW"),
-             #                   Split(title="ba_security2", best_segment="asdf", best_time="asdf", time="WOW")]
-
             self.splits_data = Splits.from_json(f.read())
 
         self.emit_signal()
@@ -200,11 +208,11 @@ class BunnysplitShit(QObject):
         #print(f"DEBUG: Already visited maps: {self.already_visited_maps}")
 
         if data[1] == MessageType.TIME.value:
-            print("Time", data)
+            # print("Time", data)
             self.parse_time(data, 2)
 
         elif data[1] == MessageType.EVENT.value:
-            print("Event", data)
+            # print("Event", data)
             self.parse_time(data, 3)
             self.parse_event(data)
 
@@ -218,11 +226,20 @@ class BunnysplitShit(QObject):
         self.curr_split = 0
         self.timer_started = False  # TODO: should be state enum or someshit, probably
         self.already_visited_maps.clear()
+        # self.run_finished = False
+
+    def split(self):
+        self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
+        self.splits_data.splits[self.curr_split].time = self.curr_time
+        self.curr_split += 1
+
+    def finish_run(self):
+        pass
 
     def parse_event(self, data: bytes):
         event_type = data[2]
         if event_type == EventType.GAMEEND.value:
-            pass
+            self.finish_run()
 
         elif event_type == EventType.MAPCHANGE.value:
             length = struct.unpack('<I', data[11:15])[0]
@@ -231,18 +248,15 @@ class BunnysplitShit(QObject):
             if mapname in self.already_visited_maps:
                 pass
 
-            elif self.splits_data.splits[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
-            # elif self.splits_data[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
-                self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
-                self.curr_split += 1
+            elif self.curr_split == len(self.splits_data.splits): # TODO: We are not ending right now on a Split(), we only end on GAMEEND
+                pass
 
-            #elif self.splits_data[self.curr_split + 1].title == mapname \
-             #       and self.splits_data[self.curr_split].title not in self.already_visited_maps:
+            elif self.splits_data.splits[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
+                self.split()
+
             elif self.splits_data.splits[self.curr_split + 1].title == mapname \
                  and self.splits_data.splits[self.curr_split].title not in self.already_visited_maps:
-                self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
-                self.curr_split += 1
-
+                self.split()
 
             # print(self.curr_time)
             # print(self.splits_data.splits[self.curr_split])
@@ -252,8 +266,8 @@ class BunnysplitShit(QObject):
             self.reset_timer() # TOOD: Reload the JSON file?
 
         elif event_type == EventType.TIMER_START.value:
+            print("Timer started")
             self.timer_started = True
-            self.curr_split = 0
 
         elif event_type == EventType.BS_ALEAPOFFAITH.value:
             pass
@@ -265,7 +279,7 @@ class BunnysplitShit(QObject):
         seconds = data[offset + 5]
         milliseconds = struct.unpack('<H', data[offset + 6:offset + 8])[0]
         # print(f"{hours}, {minutes}, {seconds}, {milliseconds}")
-        curr_time = hours, minutes, seconds, milliseconds  # TODO: ?
+        # curr_time = hours, minutes, seconds, milliseconds  # TODO: ?
         self.curr_time = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds).total_seconds()
 
         # self.curr_time = hours * 3600 + minutes * 60 + seconds + milliseconds/1000
@@ -284,7 +298,6 @@ if __name__ == "__main__":
     #backend = Backend()
 
     engine.rootObjects()[0].setProperty('backend', bsp)
-    engine.rootContext().setContextProperty('backend2', bsp.splits_data)
 
     # Initial call to trigger first update. Must be after the setProperty to connect signals.
     # backend.emit_signal()"""

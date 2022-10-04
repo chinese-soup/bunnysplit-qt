@@ -43,6 +43,7 @@ class Split(QObject):
     best_segment: str
 
     identifier: int = field(default_factory=count().__next__)
+    delta: float = field(default=0)
 
     # @Property(str, notify=mrdat)
     # def get_title(self):
@@ -107,6 +108,10 @@ class Worker(QRunnable):
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
+        self.should_stop = False
+
+    def stop_queue(self, stop_or_not):
+        self.should_stop = stop_or_not
 
     @Slot()  # QtCore.Slot
     def run(self):
@@ -116,6 +121,9 @@ class Worker(QRunnable):
 
         q1 = posixmq.Queue("/bxt", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
         while True:
+            if self.should_stop:
+                break
+
             if q1.qsize() > 0:
                 try:
                     msg = q1.get_nowait()
@@ -162,7 +170,7 @@ class BunnysplitShit(QObject):
     @Property("QVariantList", notify=current_time_changed)
     def get_splits(self):
         splits_as_list = [x.__dict__ for x in self.splits_data.splits]
-        return splits_as_list
+        return splits_as_list # TODO: ← & ↑ combine, this is here for a breakpoint lul
 
     def __init__(self):
         super().__init__()
@@ -226,7 +234,7 @@ class BunnysplitShit(QObject):
         self.curr_split = 0
         self.timer_started = False  # TODO: should be state enum or someshit, probably
         self.already_visited_maps.clear()
-        # self.run_finished = False
+        self.run_finished = False # TODO: repalce with enum timer_state?
 
     def split(self):
         self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
@@ -234,7 +242,9 @@ class BunnysplitShit(QObject):
         self.curr_split += 1
 
     def finish_run(self):
-        pass
+        self.run_finished = True
+        self.curr_split = 0
+
 
     def parse_event(self, data: bytes):
         event_type = data[2]
@@ -245,10 +255,12 @@ class BunnysplitShit(QObject):
             length = struct.unpack('<I', data[11:15])[0]
             mapname = data[15:15 + length].decode("utf-8")
             print(f"DEBUG2: Mapname got = {mapname}")
-            if mapname in self.already_visited_maps:
+            print(f"{self.curr_split} | {len(self.splits_data.splits)}")
+
+            if self.curr_split == len(self.splits_data.splits) - 1: # TODO: We are not ending right now on a Split(), we only end on GAMEEND
                 pass
 
-            elif self.curr_split == len(self.splits_data.splits): # TODO: We are not ending right now on a Split(), we only end on GAMEEND
+            elif mapname in self.already_visited_maps:
                 pass
 
             elif self.splits_data.splits[self.curr_split + 1].title == mapname and len(self.already_visited_maps) == 0:
@@ -309,5 +321,5 @@ if __name__ == "__main__":
     threadpool = QThreadPool()
     threadpool.start(worker)
     worker.signals.result.connect(bsp.parse_message)
-
+    app.aboutToQuit.connect(lambda: worker.stop_queue(True))
     sys.exit(app.exec_())

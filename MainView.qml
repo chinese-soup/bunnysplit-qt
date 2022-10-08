@@ -48,7 +48,21 @@ GridLayout
     }
     GridLayout {
         columns: 1
-
+        Row {
+            spacing: 15
+            Text {
+                text: "SPlit name"
+                font.bold: true
+            }
+            Text {
+                font.bold: true
+                text: "Delta"
+            }
+            Text {
+                text: "Best time blabla"
+                font.bold: true
+            }
+        }
 
         Repeater {
             id: repeater3
@@ -56,6 +70,7 @@ GridLayout
 
             delegate: RowSplit {
                 title: modelData.title
+                delta: modelData.delta > 0 ? "+" + modelData.delta : modelData.delta
                 best_time: modelData.time
                 current_split: backend.curr_split_index_getter == index
            }

@@ -15,11 +15,11 @@ ColumnLayout {
             // current_time_property = msg["curr_time"]
             //console.log(msg["curr_time"])
             //console.log(msg["splits_data"][0])
-            console.log(backend.get_splits.length)
+            /*console.log(backend.get_splits.length)
             console.log(backend.get_splits)
 
             console.log(msg.get_splits)
-            console.log(backend.timer_state_getter)
+            console.log(backend.timer_state_getter)*/
 
 
             /*for(var property in msg)
@@ -30,29 +30,43 @@ ColumnLayout {
     }
     RowLayout
     {
-        Row {
-            Text {
-                Layout.alignment: Qt.AlignCenter
-                text: backend.split_data.title + "(" + backend.split_data.category + ")"
-                font.pixelSize: 13
+        Layout.fillWidth: parent.width
+        Label {
+            Layout.alignment: Qt.AlignCenter
+            text: backend.split_data.title + "(" + backend.split_data.category + ")"
+            font.pixelSize: 13
+            font.bold: true
+            color: 'white'
+
+            background: Rectangle {
                 color: 'black'
+                width: parent.width
+                height: parent.height
             }
         }
-        Row {
-            Text {
-                Layout.alignment: Qt.AlignRight
-                text: backend.split_data.attempt_count
-                font.pixelSize: 13
+        Label {
+            Layout.alignment: Qt.AlignRight
+            text: backend.split_data.attempt_count
+            font.pixelSize: 13
+            color: 'white'
+
+            background: Rectangle {
                 color: 'black'
+                width: parent.width
+                height: parent.height
             }
         }
 
-        Row {
-            Text {
-                Layout.alignment: Qt.AlignRight
-                text: backend.split_data.finished_count
-                font.pixelSize: 13
+        Label {
+            Layout.alignment: Qt.AlignRight
+            text: backend.split_data.finished_count
+            font.pixelSize: 13
+            color: 'white'
+
+            background: Rectangle {
                 color: 'black'
+                width: parent.width
+                height: parent.height
             }
         }
     }
@@ -67,22 +81,23 @@ ColumnLayout {
 
     GridLayout {
         columns: 1
-        Row {
-            spacing: 15
+        RowLayout {
             Text {
-                text: "SPlit name"
+                text: "Split name"
                 font.bold: true
+                Layout.preferredWidth: parent.width / 3
             }
             Text {
                 font.bold: true
                 text: "Delta"
+                Layout.preferredWidth: parent.width / 3
             }
             Text {
-                text: "Best time blabla"
+                text: "BestTime"
                 font.bold: true
+                Layout.fillWidth: true
             }
         }
-
         Repeater {
             id: repeater3
             model: backend.get_splits
@@ -96,15 +111,16 @@ ColumnLayout {
             }
         }
     }
-    Row {
+    //Row {
         ColumnLayout {
             Text {
                 id: current_time
-                Layout.alignment: Qt.AlignLeft
                 text: backend.curr_time_getter
                 font.pixelSize: 36
                 color: backend.timer_state_getter ? 'green' : 'black'
+                Layout.fillWidth: true
+                //Layout.preferredWidth: 20
             }
         }
-    }
+    //}
 }

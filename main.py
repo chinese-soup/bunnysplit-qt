@@ -45,7 +45,6 @@ class Split(QObject):
     delta: float = field(default=0) # TODO: ←&↓ These in seperate subclass? dunno if possible tho because of QObject bs tho...
     time_this_run: datetime.timedelta = field(default=datetime.timedelta())
 
-
     # @Property(str, notify=mrdat)
     # def get_title(self):
     #     return self.title
@@ -87,7 +86,7 @@ class WorkerSignals(QObject):
 
 class Worker(QRunnable):
     """
-    Worker thread
+    Worker thread for the BXT message queue
     """
     def __init__(self, *args, **kwargs):
         super(Worker, self).__init__()
@@ -131,7 +130,7 @@ class Worker(QRunnable):
 class BunnysplitShit(QObject):
     updated = Signal(QObject)
     #updated = Signal("QVariantMap")
-    current_time_changed = Signal(name="currentTimeChanged")
+    current_time_changed = Signal(name="currentTimeChanged") # TODO: unique the signals, dont always send everything, where it isnt necessary
 
     def emit_signal(self):
         # Pass the current time to QML.
@@ -194,7 +193,8 @@ class BunnysplitShit(QObject):
         self.curr_split = 0
         self.already_visited_maps = []
 
-        with open("splits.example.json") as f:
+        with open("splits/splits.1665497570.9953058.json") as f:
+        #with open("splits.example.json") as f:
             self.splits_data = Splits.from_json(f.read())
 
         self.emit_signal()
@@ -263,6 +263,8 @@ class BunnysplitShit(QObject):
         self.already_visited_maps = [] #.clear()
         self.run_finished = False # TODO: repalce with enum timer_state?
 
+        self.splits_data.attempt_count += 1
+
         for split in self.splits_data.splits:
             split.delta = 0 # reset the delta for all of them.
 
@@ -283,26 +285,61 @@ class BunnysplitShit(QObject):
             self.run_finished = True
             self.timer_started = False
             self.curr_split = 0
+            self.splits_data.finished_count += 1
+            self.save_finished_run(is_pb_run=True)
         else:
             self.curr_split += 1
+
+    def save_finished_run(self, is_pb_run=True):
+        """
+        Blabla
+        TODO: best time / best segment stuff
+        :param is_pb_run:
+        :return:
+        """
+        for split in self.splits_data.splits:
+            best_time_td = self.timestring_to_timedelta(split.time)
+            if is_pb_run:
+                split.time = self.timedelta_to_timestring(split.time_this_run)
+
+        splits_data_dict = self.splits_data.to_dict()
+        splits_list = splits_data_dict["splits"]
+        
+        # Remove the key that are supposed to be runtime only
+        del_keys = ["timeThisRun", "delta", "identifier"]
+        cleaned_up_splits = [
+            {k: v for k, v in sub.items() if k not in del_keys}
+            for sub in splits_list
+        ]
+
+        # Replace the splits in the original dictionary
+        # with a list of new "runtime data cleaned up" dictionaries
+        splits_data_dict["splits"] = cleaned_up_splits
+
+        with open ("splits/splits.{}.json".format(time.time()), "w") as f:
+            json.dump(splits_data_dict, f, indent=4)
+
+        # Finally, set the new data that we've just saved as the current splits_data
+        self.splits_data = Splits.from_dict(splits_data_dict)
+
 
     def finish_run(self):
         self.run_finished = True
         self.curr_split = 0
         self.timer_started = False
 
+
     def parse_event(self, data: bytes):
         event_type = data[2]
+
         if event_type == EventType.GAMEEND.value:
             if self.curr_split == len(self.splits_data.splits) - 1:
                 self.split(finish=True)
 
         elif event_type == EventType.MAPCHANGE.value:
-            length = struct.unpack('<I', data[11:15])[0]
-            mapname = data[15:15 + length].decode("utf-8")
-            print(f"DEBUG2: Mapname got = {mapname}")
-            print(f"{self.curr_split} | {len(self.splits_data.splits)} | {self.already_visited_maps}")
-
+            mapname = self.parse_mapname(data)
+            # print(f"DEBUG2: Mapname got = {mapname}")
+            # print(f"{self.curr_split} | {len(self.splits_data.splits)} | {self.already_visited_maps}")
 
             if self.curr_split == len(self.splits_data.splits) - 1: # TODO: We are not ending right now on a Split(), we only end on GAMEEND
                 # self.finish_run()
@@ -333,9 +370,21 @@ class BunnysplitShit(QObject):
 
         elif event_type == EventType.BS_ALEAPOFFAITH.value:
             # TODO: Implement
-            pass
+            if "ba_teleport2" in self.already_visited_maps:
+                self.split()
 
-    def parse_time(self, data: bytes, offset: int):
+    @staticmethod
+    def parse_mapname(data):
+        """
+        Parses the mapname from the `data` of an event
+        :param data: event's data
+        :return:
+        """
+        length = struct.unpack('<I', data[11:15])[0]
+        mapname = data[15:15 + length].decode("utf-8")
+        return mapname
+
+    def parse_time(self, data: bytes, offset: int): # TODO: should be static and return instead of setting self.curr_time?
         # print(f"ParseTime({data}, {offset})")
         hours = struct.unpack('<I', data[offset:offset + 4])[0]
         minutes = data[offset + 4]
@@ -355,6 +404,7 @@ if __name__ == "__main__":
     end = bsp.timedelta_to_timestring(dt)
     assert origgg == end"""
 
+    #bsp.save_finished_run()
     #sys.exit(1)
 
     QQuickStyle.setStyle("Material")

@@ -6,7 +6,6 @@ import QtQuick.Shapes 1.4
 
 ColumnLayout {
     spacing: 0
-
     anchors.fill: parent
     Connections {
         target: backend
@@ -28,11 +27,19 @@ ColumnLayout {
             }*/
         }
     }
+
     RowLayout
     {
-        Layout.fillWidth: parent.width
+        id: layoutTopHeader
+        Layout.fillWidth: true;
+        Layout.preferredHeight: gamenameLabel.font.pixelSize + 8
+
         Label {
+            id: gamenameLabel
             Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true;
+            Layout.preferredWidth: 100
+
             text: backend.split_data.title + "(" + backend.split_data.category + ")"
             font.pixelSize: 13
             font.bold: true
@@ -49,6 +56,8 @@ ColumnLayout {
             text: backend.split_data.attempt_count
             font.pixelSize: 13
             color: 'white'
+            Layout.fillWidth: true;
+            Layout.fillHeight: true
 
             background: Rectangle {
                 color: 'black'
@@ -56,12 +65,14 @@ ColumnLayout {
                 height: parent.height
             }
         }
-
         Label {
             Layout.alignment: Qt.AlignRight
             text: backend.split_data.finished_count
             font.pixelSize: 13
             color: 'white'
+
+            Layout.fillWidth: true;
+            Layout.fillHeight: true
 
             background: Rectangle {
                 color: 'black'
@@ -70,18 +81,36 @@ ColumnLayout {
             }
         }
     }
-    /*Row {
-        Text {
-            Layout.alignment: Qt.AlignCenter
-            text:
-            font.pixelSize: 8
-            color: backend.timer_state_getter ? 'green' : 'black'
-        }
-    }*/
 
-    GridLayout {
-        columns: 1
-        RowLayout {
+    ScrollView
+    {
+       Layout.fillWidth: true
+       Layout.fillHeight: true
+       id: myScrollView
+       clip: true
+       ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+
+       ListView {
+           highlightFollowsCurrentItem: true
+           highlightRangeMode: ListView.ApplyRange
+           preferredHighlightBegin: height / 2 - 24
+           preferredHighlightEnd: height / 2 + 24
+
+           id: kokot
+           model: backend.get_splits
+           currentIndex: backend.curr_split_index_getter
+
+           delegate: RowSplit {
+               title: modelData.title
+               //delta: modelData.curr_split_index_getter >= index ? "nope" : modelData.delta
+               delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
+               best_time: modelData.time
+               current_split: backend.curr_split_index_getter === index
+           }
+        }
+    }
+        //columns: 1
+        /*RowLayout {
             Text {
                 text: "Split name"
                 font.bold: true
@@ -96,31 +125,19 @@ ColumnLayout {
                 text: "BestTime"
                 font.bold: true
                 Layout.fillWidth: true
-            }
-        }
-        Repeater {
-            id: repeater3
-            model: backend.get_splits
+            }*/
 
-            delegate: RowSplit {
-                title: modelData.title
-                //delta: modelData.curr_split_index_getter >= index ? "nope" : modelData.delta
-                delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
-                best_time: modelData.time
-                current_split: backend.curr_split_index_getter === index
+
+    Rectangle {
+        Layout.fillWidth: true;
+        Layout.preferredHeight: 50
+        Text {
+            id: current_time
+            text: backend.curr_time_getter
+            font.pixelSize: 36
+            color: backend.timer_state_getter ? 'green' : 'black'
+            Layout.fillWidth: true
+            //Layout.preferredWidth: 20
             }
         }
     }
-    //Row {
-        ColumnLayout {
-            Text {
-                id: current_time
-                text: backend.curr_time_getter
-                font.pixelSize: 36
-                color: backend.timer_state_getter ? 'green' : 'black'
-                Layout.fillWidth: true
-                //Layout.preferredWidth: 20
-            }
-        }
-    //}
-}

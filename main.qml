@@ -21,4 +21,7 @@ Window {
 
         //anchors.fill:
     }
+
+
+
 }

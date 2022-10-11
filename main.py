@@ -147,7 +147,7 @@ class BunnysplitShit(QObject):
         # return self.curr_time.total_seconds()
         return self.timedelta_to_timestring(self.curr_time)
 
-    @Property(float, notify=current_time_changed)
+    @Property(float, notify=current_time_changed)  # TODO: THIS ISNT FLOAT WTF
     def curr_split_index_getter(self):
         if self.timer_started:
             return self.curr_split

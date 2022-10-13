@@ -31,24 +31,27 @@ ColumnLayout {
     RowLayout
     {
         id: layoutTopHeader
-        Layout.fillWidth: true;
+        Layout.fillWidth: true
+        Layout.topMargin: 0
+        Layout.bottomMargin: 10
         Layout.preferredHeight: gamenameLabel.font.pixelSize + 8
-
+        spacing: 0
         Label {
             id: gamenameLabel
-            Layout.alignment: Qt.AlignCenter
+            Layout.alignment: Qt.AlignLeft
             Layout.fillWidth: true;
             Layout.preferredWidth: 100
 
-            text: backend.split_data.title + "(" + backend.split_data.category + ")"
+            text: backend.split_data.title + "  (" + backend.split_data.category + ")"
             font.pixelSize: 13
             font.bold: true
             color: 'white'
 
             background: Rectangle {
                 color: 'black'
-                width: parent.width
-                height: parent.height
+                width: parent.width + 10
+                height: parent.height + 10
+
             }
         }
         Label {
@@ -56,13 +59,13 @@ ColumnLayout {
             text: backend.split_data.attempt_count
             font.pixelSize: 13
             color: 'white'
-            Layout.fillWidth: true;
-            Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.fillHeight: false
 
             background: Rectangle {
                 color: 'black'
-                width: parent.width
-                height: parent.height
+                width: parent.width + 10
+                height: parent.height + 10
             }
         }
         Label {
@@ -72,12 +75,12 @@ ColumnLayout {
             color: 'white'
 
             Layout.fillWidth: true;
-            Layout.fillHeight: true
+            Layout.fillHeight: false
 
             background: Rectangle {
                 color: 'black'
-                width: parent.width
-                height: parent.height
+                width: parent.width + 10
+                height: parent.height + 10
             }
         }
     }
@@ -89,6 +92,7 @@ ColumnLayout {
        id: myScrollView
        clip: true
        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+       ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
        ListView {
            highlightFollowsCurrentItem: true
@@ -99,13 +103,24 @@ ColumnLayout {
            id: kokot
            model: backend.get_splits
            currentIndex: backend.curr_split_index_getter
+           footerPositioning: ListView.OverlayFooter
 
+           footer: RowSplit {
+               property int fake_index: backend.get_splits.length - 1
+               property var last_split_obj: backend.get_splits[fake_index]
+               title: last_split_obj.title
+               // TODO: FIX
+               //delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
+               delta: last_split_obj.delta > 0 ? "+" + last_split_obj.delta : last_split_obj.delta
+               best_time: last_split_obj.time
+               is_current_split: backend.curr_split_index_getter === fake_index
+           }
            delegate: RowSplit {
                title: modelData.title
                //delta: modelData.curr_split_index_getter >= index ? "nope" : modelData.delta
                delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
                best_time: modelData.time
-               current_split: backend.curr_split_index_getter === index
+               is_current_split: backend.curr_split_index_getter === index
            }
         }
     }

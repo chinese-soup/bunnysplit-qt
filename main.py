@@ -147,7 +147,7 @@ class BunnysplitShit(QObject):
         # return self.curr_time.total_seconds()
         return self.timedelta_to_timestring(self.curr_time)
 
-    @Property(float, notify=current_time_changed)  # TODO: THIS ISNT FLOAT WTF
+    @Property(int, notify=current_time_changed)  # TODO: THIS ISNT FLOAT WTF
     def curr_split_index_getter(self):
         if self.timer_started:
             return self.curr_split
@@ -186,6 +186,22 @@ class BunnysplitShit(QObject):
         splits_as_list = [x.__dict__ for x in self.splits_data.splits]
         return splits_as_list # TODO: ← & ↑ combine, this is here for a breakpoint lul
 
+    @Property(str, notify=current_time_changed)
+    def json_filename(self):
+        return "blabla"
+
+    @json_filename.setter
+    def json_filename(self, val):
+        print("[ROFLCOTPER] ", val)
+        print("[ROFLCOTPER] ", val)
+
+    @Signal
+    def filename_changed(self):
+        pass
+
+    name = Property(str, json_filename, notify=filename_changed)
+
+
     def __init__(self):
         super().__init__()
         self.timer_started = False
@@ -193,8 +209,8 @@ class BunnysplitShit(QObject):
         self.curr_split = 0
         self.already_visited_maps = []
 
-        with open("splits/splits.1665497570.9953058.json") as f:
-        #with open("splits.example.json") as f:
+        # with open("splits/splits.1665497570.9953058.json") as f:
+        with open("splits.example.json") as f:
             self.splits_data = Splits.from_json(f.read())
 
         self.emit_signal()
@@ -202,6 +218,7 @@ class BunnysplitShit(QObject):
     def timedelta_to_timestring(self, orig_timedelta) -> str:
         """
         Converts timedelta to string time for use in the JSON splits file
+        TODO: make static and gtfo Bunnysplit class
         :return: String in the format of "MM:SS.f" f = milliseconds
         """
         time_obj = (datetime.datetime.min + orig_timedelta).time()
@@ -211,6 +228,7 @@ class BunnysplitShit(QObject):
     def timestring_to_timedelta(self, orig_time) -> datetime.timedelta:
         """
         Converts string time to timedelta
+        TODO: make static and gtfo Bunnysplit class
         :return: datetime.timedelta object representing the original string time
         """
         # orig_time = "04:02.934"
@@ -398,14 +416,8 @@ class BunnysplitShit(QObject):
 if __name__ == "__main__":
     bsp = BunnysplitShit()
 
-    """origgg = "04:20.300"
-    print("ORIG = ", origgg)
-    dt = bsp.timestring_to_timedelta(origgg)
-    end = bsp.timedelta_to_timestring(dt)
-    assert origgg == end"""
-
-    #bsp.save_finished_run()
-    #sys.exit(1)
+    # bsp.save_finished_run()
+    # sys.exit(1)
 
     QQuickStyle.setStyle("Material")
     app = QGuiApplication(sys.argv)
@@ -415,8 +427,6 @@ if __name__ == "__main__":
     engine.load(qml_file)
 
     # Define our backend object, which we pass to QML.
-    #backend = Backend()
-
     engine.rootObjects()[0].setProperty('backend', bsp)
 
     # Initial call to trigger first update. Must be after the setProperty to connect signals.
@@ -426,8 +436,12 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     worker = Worker()
+    worker.signals.result.connect(bsp.parse_message)
+
     threadpool = QThreadPool()
     threadpool.start(worker)
-    worker.signals.result.connect(bsp.parse_message)
+
+
     app.aboutToQuit.connect(lambda: worker.stop_queue(True))
+
     sys.exit(app.exec_())

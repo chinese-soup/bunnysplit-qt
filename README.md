@@ -1,6 +1,5 @@
 # Bunnysplit-qt
-## About
-### Bunnysplit-qt is a GUI timer with splits which serves exclusively as a front-end for BXT's BunnySplit on Linux.
+#### Bunnysplit-qt is a GUI timer with splits which serves exclusively as a front-end for BXT's BunnySplit on Linux.
 
 ## Motivation
 * There was no existing "native" integration with BXT's BunnySplit, even though Steam runs can be done on the native Linux version of Half-Life and its expansions.

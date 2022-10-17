@@ -7,6 +7,7 @@ import QtQuick.Shapes 1.4
 ColumnLayout {
     spacing: 0
     anchors.fill: parent
+
     Connections {
         target: backend
 
@@ -33,7 +34,7 @@ ColumnLayout {
         id: layoutTopHeader
         Layout.fillWidth: true
         Layout.topMargin: 0
-        Layout.bottomMargin: 10
+        Layout.bottomMargin: 15
         Layout.preferredHeight: gamenameLabel.font.pixelSize + 8
         spacing: 0
         Label {
@@ -51,7 +52,7 @@ ColumnLayout {
                 color: 'black'
                 width: parent.width + 10
                 height: parent.height + 10
-
+                y: -5
             }
         }
         Label {
@@ -66,6 +67,7 @@ ColumnLayout {
                 color: 'black'
                 width: parent.width + 10
                 height: parent.height + 10
+                y: -5
             }
         }
         Label {
@@ -81,6 +83,7 @@ ColumnLayout {
                 color: 'black'
                 width: parent.width + 10
                 height: parent.height + 10
+                y: -5
             }
         }
     }
@@ -91,7 +94,7 @@ ColumnLayout {
        Layout.fillHeight: true
        id: myScrollView
        clip: true
-       ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+       ScrollBar.vertical.policy: ScrollBar.AsNeeded
        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
        ListView {
@@ -108,40 +111,23 @@ ColumnLayout {
            footer: RowSplit {
                property int fake_index: backend.get_splits.length - 1
                property var last_split_obj: backend.get_splits[fake_index]
-               title: last_split_obj.title
+               //title: last_split_obj.title
+               title: backend.curr_split_index_getter
                // TODO: FIX
                //delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
                delta: last_split_obj.delta > 0 ? "+" + last_split_obj.delta : last_split_obj.delta
-               best_time: last_split_obj.time
+               best_time: last_split_obj.split_time
                is_current_split: backend.curr_split_index_getter === fake_index
            }
            delegate: RowSplit {
                title: modelData.title
                //delta: modelData.curr_split_index_getter >= index ? "nope" : modelData.delta
                delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
-               best_time: modelData.time
+               best_time: modelData.split_time
                is_current_split: backend.curr_split_index_getter === index
            }
         }
     }
-        //columns: 1
-        /*RowLayout {
-            Text {
-                text: "Split name"
-                font.bold: true
-                Layout.preferredWidth: parent.width / 3
-            }
-            Text {
-                font.bold: true
-                text: "Delta"
-                Layout.preferredWidth: parent.width / 3
-            }
-            Text {
-                text: "BestTime"
-                font.bold: true
-                Layout.fillWidth: true
-            }*/
-
 
     Rectangle {
         Layout.fillWidth: true;

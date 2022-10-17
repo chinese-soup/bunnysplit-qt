@@ -6,25 +6,25 @@
   "splits": [
     {
       "title": "ba_tram3",
-      "time": "00:00.100",
+      "split_time": "00:00.100",
       "best_time": "00:00.100",
       "best_segment": "00:00.100"
     },
     {
       "title": "ba_security1",
-      "time": "00:00.934",
+      "split_time": "00:00.934",
       "best_time": "14:16.933",
       "best_segment": "2:35.819"
     },
     {
       "title": "ba_security2",
-      "time": "00:14.600",
+      "split_time": "00:14.600",
       "best_time": "17:26.241",
       "best_segment": "3:08.843"
     },
     {
       "title": "ba_maint",
-      "time": "17:51.600",
+      "split_time": "17:51.600",
       "best_time": "17:26.241",
       "best_segment": "3:08.843"
     }

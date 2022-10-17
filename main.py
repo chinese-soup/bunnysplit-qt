@@ -37,7 +37,7 @@ from const import EventType, MessageType
 @dataclass
 class Split(QObject):
     title: str
-    time: str
+    split_time: str
     best_time: str
     best_segment: str
 
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
 
 
 class WorkerSignals(QObject):
-    '''
+    """
     Defines the signals available from a running worker thread.
 
     Supported signals are:
@@ -78,7 +78,7 @@ class WorkerSignals(QObject):
     result
         object data returned from processing, anything
 
-    '''
+    """
     finished = Signal()  # QtCore.Signal
     error = Signal(tuple)
     result = Signal(object)
@@ -127,17 +127,15 @@ class Worker(QRunnable):
                 time.sleep(0.01) # CPU usage, be gone
 
 
-class BunnysplitShit(QObject):
+class Bunnysplit(QObject):
     updated = Signal(QObject)
     #updated = Signal("QVariantMap")
     current_time_changed = Signal(name="currentTimeChanged") # TODO: unique the signals, dont always send everything, where it isnt necessary
 
     def emit_signal(self):
-        # Pass the current time to QML.
-        # curr_time = strftime("%H:%M:%S", localtime())
         # self.updated.emit(self)
-        print("Emitting self.__dict__")
-        self.updated.emit(self)
+        # print("Emitting self.__dict__")
+        # self.updated.emit(self)
         self.current_time_changed.emit()
 
     # TODO: https://doc.qt.io/qtforpython/PySide6/QtCore/Property.html
@@ -165,7 +163,7 @@ class BunnysplitShit(QObject):
             current_time_td = self.curr_time
             current_split_obj = self.splits_data.splits[self.curr_split]
 
-            current_split_delta = current_time_td - self.timestring_to_timedelta(current_split_obj.time)  # TODO: . BEST TIME ETC.???
+            current_split_delta = current_time_td - self.timestring_to_timedelta(current_split_obj.split_time)  # TODO: . BEST TIME ETC.???
 
             return current_split_delta.total_seconds()
 
@@ -193,14 +191,13 @@ class BunnysplitShit(QObject):
     @json_filename.setter
     def json_filename(self, val):
         print("[ROFLCOTPER] ", val)
-        print("[ROFLCOTPER] ", val)
 
     @Signal
     def filename_changed(self):
+        print("Filename changed")
         pass
 
     name = Property(str, json_filename, notify=filename_changed)
-
 
     def __init__(self):
         super().__init__()
@@ -293,7 +290,7 @@ class BunnysplitShit(QObject):
         current_time_sec = current_time_td.total_seconds()
         current_split_obj = self.splits_data.splits[self.curr_split]
 
-        current_split_delta = current_time_td - self.timestring_to_timedelta(current_split_obj.time) # TODO: . BEST TIME ETC.???
+        current_split_delta = current_time_td - self.timestring_to_timedelta(current_split_obj.split_time) # TODO: . BEST TIME ETC.???
 
         self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
         self.splits_data.splits[self.curr_split].time_this_run = current_time_td
@@ -304,9 +301,17 @@ class BunnysplitShit(QObject):
             self.timer_started = False
             self.curr_split = 0
             self.splits_data.finished_count += 1
-            self.save_finished_run(is_pb_run=True)
+            self.is_this_pb_run()
+            # self.save_finished_run(is_pb_run=True)
         else:
             self.curr_split += 1
+
+    def is_this_pb_run(self):
+        if self.splits_data.splits[-1].time_this_run < self.timestring_to_timedelta(self.splits_data.splits[-1].split_time):
+            return True
+
+        return False
+
 
     def save_finished_run(self, is_pb_run=True):
         """
@@ -316,9 +321,9 @@ class BunnysplitShit(QObject):
         :return:
         """
         for split in self.splits_data.splits:
-            best_time_td = self.timestring_to_timedelta(split.time)
+            best_time_td = self.timestring_to_timedelta(split.split_time)
             if is_pb_run:
-                split.time = self.timedelta_to_timestring(split.time_this_run)
+                split.split_time = self.timedelta_to_timestring(split.time_this_run)
 
         splits_data_dict = self.splits_data.to_dict()
         splits_list = splits_data_dict["splits"]
@@ -414,7 +419,7 @@ class BunnysplitShit(QObject):
         # self.curr_time = hours * 3600 + minutes * 60 + seconds + milliseconds/1000
 
 if __name__ == "__main__":
-    bsp = BunnysplitShit()
+    bsp = Bunnysplit()
 
     # bsp.save_finished_run()
     # sys.exit(1)

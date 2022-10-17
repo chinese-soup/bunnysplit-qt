@@ -24,10 +24,57 @@ ApplicationWindow {
         onAccepted: backend.json_filename = selectedFile
     }
 
-    header: ToolBar {
+    /*header: ToolBar {
         Button {
             text: qsTr("Choose Image...")
-            onClicked: fileDialog.open()
+            onClicked: menu.open() //fileDialog.open()
+
+            Menu {
+                id: menu
+                y: fileButton.height
+
+                MenuItem {
+                    text: "New..."
+                }
+                MenuItem {
+                    text: "Open..."
+                    onClicked: fileDialog.open()
+                }
+                MenuItem {
+                    text: "Save"
+                }
+            }
+        }
+    }*/
+
+    MouseArea {
+        z: 50000
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: {
+            if (mouse.button === Qt.RightButton)
+                contextMenu.popup()
+        }
+        onPressAndHold: {
+            if (mouse.source === Qt.MouseEventNotSynthesized)
+                contextMenu.popup()
+        }
+        Menu {
+            id: contextMenu
+            MenuItem {
+                onClicked: console.log("Edit splits")
+                text: "Edit splits"
+            }
+            MenuItem {
+                onClicked: fileDialog.open()
+                text: "Open"
+            }
+            MenuItem {
+                text: "Save"
+            }
+            MenuItem {
+                text: "Save as..."
+            }
         }
     }
 

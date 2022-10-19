@@ -1,0 +1,464 @@
+{
+  "title": "Half-Life",
+  "category": "Scripted RTA",
+  "attempt_count": 0,
+  "finished_count": 0,
+    "splits": [
+        {
+            "title": "c1a0",
+            "split_time": "",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a0d",
+            "split_time": "",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a0a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a0b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a0e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a0c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a1",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a1a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a1f",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a1b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a1c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a2",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a2a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a2b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a3",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4k",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4f",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4i",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4q",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c1a4j",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a1",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2b1",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2f",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2g",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a2h",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a3",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a3a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a3b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a3c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a3d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a3e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4f",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a4g",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5w",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5x",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5n",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5f",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c2a5g",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a1",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a1a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a1b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a2e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a2",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a2a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a2b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a2c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c3a2d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a2",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a2a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a2b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1a",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1b",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1c",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1d",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1e",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a1f",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        },
+        {
+            "title": "c4a3",
+            "split_time": "00:00.000000",
+            "best_time": "00:00.000000",
+            "best_segment": "00:00.000000"
+        }
+    ]
+}

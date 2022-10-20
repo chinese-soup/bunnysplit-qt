@@ -13,12 +13,6 @@ from ipcqueue import posixmq
 import json
 import struct
 
-# Data class related
-from typing import List
-from itertools import count
-from dataclasses import dataclass, field
-from dataclass_wizard import JSONWizard
-
 # Qt bullshit x
 from pathlib import Path
 
@@ -29,38 +23,11 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QTimer, QObject, Signal, Slot, Property
 from PySide6.QtCore import QRunnable, Slot, QThreadPool
+from PySide6.QtCore import QDir, QUrl
 
 # Local
 from const import EventType, MessageType
-
-
-@dataclass
-class Split(QObject):
-    title: str
-    split_time: str
-    best_time: str
-    best_segment: str
-
-    identifier: int = field(default_factory=count().__next__)
-    delta: float = field(default=0) # TODO: ←&↓ These in seperate subclass? dunno if possible tho because of QObject bs tho...
-    time_this_run: datetime.timedelta = field(default=datetime.timedelta())
-
-    # @Property(str, notify=mrdat)
-    # def get_title(self):
-    #     return self.title
-    #
-
-@dataclass
-class Splits(JSONWizard):
-    title: str
-    category: str
-    attempt_count: int
-    finished_count: int
-    splits: List[Split] = field(default_factory=list)
-
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+from splits import Splits
 
 
 class WorkerSignals(QObject):
@@ -84,6 +51,7 @@ class WorkerSignals(QObject):
     result = Signal(object)
 
 
+# noinspection PyUnresolvedReferences
 class Worker(QRunnable):
     """
     Worker thread for the BXT message queue
@@ -105,7 +73,7 @@ class Worker(QRunnable):
         Your code goes in this function
         """
         try:
-            q1 = posixmq.Queue("/bxt", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
+            q1 = posixmq.Queue("/BunnymodXT-BunnySplit", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
         except ipcqueue.posixmq.QueueError:
             print("Couldn't open the message queue. Is a BXT game running?")
             return
@@ -127,13 +95,12 @@ class Worker(QRunnable):
                 time.sleep(0.01) # CPU usage, be gone
 
 
+# noinspection PyUnresolvedReferences
 class Bunnysplit(QObject):
     updated = Signal(QObject)
-    #updated = Signal("QVariantMap")
     current_time_changed = Signal(name="currentTimeChanged") # TODO: unique the signals, dont always send everything, where it isnt necessary
 
     def emit_signal(self):
-        # self.updated.emit(self)
         # print("Emitting self.__dict__")
         # self.updated.emit(self)
         self.current_time_changed.emit()
@@ -167,37 +134,54 @@ class Bunnysplit(QObject):
 
             return current_split_delta.total_seconds()
 
-    @Property(bool, notify=current_time_changed) #TODO: int (enum)
+    @Property(bool, notify=current_time_changed) # TODO: int (enum)
     def timer_state_getter(self):
         return self.timer_started
 
     @Property("QVariantMap", notify=current_time_changed)
     def split_data(self):
-        #split_data = {"title": self.splits_data.title,
+        # split_data = {"title": self.splits_data.title,
         #              "category": self.splits_data.category}
         return self.splits_data.__dict__ # TODO: ← & ↑ combine, this is here for a breakpoint lul
 
     # @Property(list)
-    #@Slot(result="QVariantList")
+    # @Slot(result="QVariantList")
     @Property("QVariantList", notify=current_time_changed)
     def get_splits(self):
         splits_as_list = [x.__dict__ for x in self.splits_data.splits]
-        return splits_as_list # TODO: ← & ↑ combine, this is here for a breakpoint lul
+        return splits_as_list  # TODO: ← & ↑ combine, this is here for a breakpoint lul
 
-    @Property(str, notify=current_time_changed)
+    @Property(str)
     def json_filename(self):
-        return "blabla"
+        return self.filename
 
     @json_filename.setter
     def json_filename(self, val):
-        print("[ROFLCOTPER] ", val)
+        self.filename = QDir.toNativeSeparators(QUrl(val).path())
+        self.filename_changed.emit()
 
     @Signal
     def filename_changed(self):
-        print("Filename changed")
-        pass
+        print(f"Filename changed, now it is {self.filename}")
 
     name = Property(str, json_filename, notify=filename_changed)
+
+    def check_empty_splits(self):
+        for split in self.splits_data.splits:
+            if self.timestring_to_timedelta(split.split_time) == datetime.timedelta(0):
+                split.split_time = "99:99.0000000"  # Set the split_time to None
+            else:
+                pass
+
+    def open_split_file(self):
+        if self.timer_started:
+            return
+
+        with open(self.filename) as f:
+            self.splits_data = Splits.from_json(f.read())
+            self.check_empty_splits()
+
+        self.emit_signal()
 
     def __init__(self):
         super().__init__()
@@ -205,14 +189,15 @@ class Bunnysplit(QObject):
         self.curr_time = datetime.timedelta()
         self.curr_split = 0
         self.already_visited_maps = []
+        self.filename = "splits/splits.hl.json"
+        self.splits_data = None
 
-        # with open("splits/splits.1665497570.9953058.json") as f:
-        with open("splits.example.json") as f:
-            self.splits_data = Splits.from_json(f.read())
+        self.open_split_file()
 
         self.emit_signal()
 
-    def timedelta_to_timestring(self, orig_timedelta) -> str:
+    @staticmethod
+    def timedelta_to_timestring(orig_timedelta) -> str:
         """
         Converts timedelta to string time for use in the JSON splits file
         TODO: make static and gtfo Bunnysplit class
@@ -222,26 +207,29 @@ class Bunnysplit(QObject):
         timestring = datetime.time.strftime(time_obj, "%M:%S.%f")
         return timestring
 
-    def timestring_to_timedelta(self, orig_time) -> datetime.timedelta:
+    @staticmethod
+    def timestring_to_timedelta(orig_time) -> datetime.timedelta:
         """
         Converts string time to timedelta
         TODO: make static and gtfo Bunnysplit class
         :return: datetime.timedelta object representing the original string time
         """
         # orig_time = "04:02.934"
-        dt_parsed = datetime.datetime.strptime(orig_time, '%M:%S.%f').time()
-        ms = dt_parsed.microsecond / 1000
-        delta_obj = datetime.timedelta(hours=dt_parsed.hour,
-                                       minutes=dt_parsed.minute,
-                                       seconds=dt_parsed.second,
-                                       milliseconds=ms)
-        print(delta_obj)
-        print(delta_obj.total_seconds())
+        try:
+            dt_parsed = datetime.datetime.strptime(orig_time, '%M:%S.%f').time()
+            ms = dt_parsed.microsecond / 1000
+            delta_obj = datetime.timedelta(hours=dt_parsed.hour,
+                                           minutes=dt_parsed.minute,
+                                           seconds=dt_parsed.second,
+                                           milliseconds=ms)
+        except ValueError:
+            delta_obj = datetime.timedelta(0)
+
+        if delta_obj == datetime.timedelta(0):
+            print(delta_obj)
+            print(delta_obj.total_seconds())
 
         return delta_obj
-
-    def reset(self):
-        pass
 
     def parse_message(self, data: bytes):
         """
@@ -249,20 +237,16 @@ class Bunnysplit(QObject):
         :param data: message's content (in bytes)
         :return:
         """
-        # print(data[1])
-        # print(MessageType.TIME.value)
 
         # print(f"\033[%d;%dH Current time: {self.curr_time}" % (0, 0))
-        #print(f"DEBUG: Current time: {self.curr_time}")
-        #print(f"DEBUG: Current split: {self.splits_data.splits[self.curr_split]}")
-        #print(f"DEBUG: Already visited maps: {self.already_visited_maps}")
+        # print(f"DEBUG: Current time: {self.curr_time}")
+        # print(f"DEBUG: Current split: {self.splits_data.splits[self.curr_split]}")
+        # print(f"DEBUG: Already visited maps: {self.already_visited_maps}")
 
         if data[1] == MessageType.TIME.value:
-            # print("Time", data)
             self.parse_time(data, 2)
 
         elif data[1] == MessageType.EVENT.value:
-            # print("Event", data)
             self.parse_time(data, 3)
             self.parse_event(data)
 
@@ -301,8 +285,7 @@ class Bunnysplit(QObject):
             self.timer_started = False
             self.curr_split = 0
             self.splits_data.finished_count += 1
-            self.is_this_pb_run()
-            # self.save_finished_run(is_pb_run=True)
+            self.save_finished_run()
         else:
             self.curr_split += 1
 
@@ -313,31 +296,25 @@ class Bunnysplit(QObject):
         return False
 
 
-    def save_finished_run(self, is_pb_run=True):
+    def save_finished_run(self):
         """
-        Blabla
+        Serialize the finished run split data and save it to a file
         TODO: best time / best segment stuff
         :param is_pb_run:
         :return:
         """
+
+        # Save whether this ia PB run into a variable
+        is_pb_run = self.is_this_pb_run()
+
         for split in self.splits_data.splits:
             best_time_td = self.timestring_to_timedelta(split.split_time)
             if is_pb_run:
                 split.split_time = self.timedelta_to_timestring(split.time_this_run)
 
+
         splits_data_dict = self.splits_data.to_dict()
         splits_list = splits_data_dict["splits"]
-        
-        # Remove the key that are supposed to be runtime only
-        del_keys = ["timeThisRun", "delta", "identifier"]
-        cleaned_up_splits = [
-            {k: v for k, v in sub.items() if k not in del_keys}
-            for sub in splits_list
-        ]
-
-        # Replace the splits in the original dictionary
-        # with a list of new "runtime data cleaned up" dictionaries
-        splits_data_dict["splits"] = cleaned_up_splits
 
         with open ("splits/splits.{}.json".format(time.time()), "w") as f:
             json.dump(splits_data_dict, f, indent=4)
@@ -379,10 +356,7 @@ class Bunnysplit(QObject):
 
             else:
                 print("WTF")
-
-            # print(self.curr_time)
-            # print(self.splits_data.splits[self.curr_split])
-            # print(self.curr_split)
+            print(self.already_visited_maps)
 
         elif event_type == EventType.TIMER_RESET.value:
             self.reset_timer() # TOOD: Reload the JSON file?
@@ -408,24 +382,19 @@ class Bunnysplit(QObject):
         return mapname
 
     def parse_time(self, data: bytes, offset: int): # TODO: should be static and return instead of setting self.curr_time?
-        # print(f"ParseTime({data}, {offset})")
         hours = struct.unpack('<I', data[offset:offset + 4])[0]
         minutes = data[offset + 4]
         seconds = data[offset + 5]
         milliseconds = struct.unpack('<H', data[offset + 6:offset + 8])[0]
-        # curr_time = hours, minutes, seconds, milliseconds  # TODO: ?
         self.curr_time = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
-
-        # self.curr_time = hours * 3600 + minutes * 60 + seconds + milliseconds/1000
 
 if __name__ == "__main__":
     bsp = Bunnysplit()
-
-    # bsp.save_finished_run()
-    # sys.exit(1)
+    bsp.save_finished_run()
 
     QQuickStyle.setStyle("Material")
-    app = QGuiApplication(sys.argv)
+    app = QApplication(sys.argv)
+    # app = QGuiApplication(sys.argv)
 
     engine = QQmlApplicationEngine()
     qml_file = str(Path(__file__).resolve().parent / "main.qml")
@@ -433,9 +402,6 @@ if __name__ == "__main__":
 
     # Define our backend object, which we pass to QML.
     engine.rootObjects()[0].setProperty('backend', bsp)
-
-    # Initial call to trigger first update. Must be after the setProperty to connect signals.
-    # backend.emit_signal()"""
 
     if not engine.rootObjects():
         sys.exit(-1)
@@ -445,7 +411,6 @@ if __name__ == "__main__":
 
     threadpool = QThreadPool()
     threadpool.start(worker)
-
 
     app.aboutToQuit.connect(lambda: worker.stop_queue(True))
 

@@ -12,6 +12,7 @@ Rectangle {
     property string title: 'N/A'
     property string delta: '?'
     property string best_time: 'N/A BEST'
+
     RowLayout {
         id: layout
         anchors.fill: parent
@@ -50,5 +51,6 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
+
     }
 }

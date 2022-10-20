@@ -124,7 +124,7 @@ ColumnLayout {
                title: modelData.title
                //delta: modelData.curr_split_index_getter >= index ? "nope" : modelData.delta
                delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
-               best_time: modelData.split_time
+               best_time: (modelData.split_time === undefined) ? modelData.time_this_run : modelData.split_time
                is_current_split: backend.curr_split_index_getter === index
            }
         }

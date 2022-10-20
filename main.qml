@@ -21,6 +21,8 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+        nameFilters: ["JSON files (*.json)"]
+        flags: FileDialog.ReadOnly
         onAccepted: backend.json_filename = selectedFile
     }
 

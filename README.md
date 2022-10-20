@@ -18,6 +18,6 @@ A: Basically, this isn't trying to save the world of Steam Half-Life RTA Linux s
 ## TODO
 - [ ] Best time
 - [ ] Gold splits
-- [ ] ListView & ScrollView for splits in QML instead of Repeater
+- [x] ListView & ScrollView for splits in QML instead of Repeater
 - [ ] General refactoring
 - [ ] Graceful quitting (stopping Worker thread etc.), signal handling

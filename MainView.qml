@@ -26,7 +26,7 @@ ColumnLayout {
             {
                 console.log(property)
             }*/
-            console.log(backend.get_splits[0].time_this_run);
+            // console.log(backend.get_splits[0].time_this_run);
         }
     }
 
@@ -143,12 +143,12 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true;
         Layout.preferredHeight: 50
+        Layout.alignment: Qt.AlignRight
         Text {
             id: current_time
             text: backend.curr_time_getter
             font.pixelSize: 36
             color: backend.timer_state_getter ? 'green' : 'black'
-            Layout.fillWidth: true
             //Layout.preferredWidth: 20
             }
         }

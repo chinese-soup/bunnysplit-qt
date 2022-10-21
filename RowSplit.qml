@@ -20,7 +20,7 @@ Rectangle {
             id: split_name_text
             font.bold: is_current_split
             text: title
-            color: current_split ? "red" : "black"
+            color: is_current_split ? "red" : "black"
             wrapMode: Text.WordWrap
             font.pixelSize: 16
 

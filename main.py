@@ -16,7 +16,6 @@ import struct
 # Qt bullshit x
 from pathlib import Path
 
-from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -70,7 +69,7 @@ class Worker(QRunnable):
     @Slot()  # QtCore.Slot
     def run(self):
         """
-        our code goes in this function
+        Worker thread for the Message Queue
         """
         try:
             q1 = posixmq.Queue("/BunnymodXT-BunnySplit", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
@@ -90,6 +89,7 @@ class Worker(QRunnable):
                     bsp.parse_message(msg)
                     self.signals.result.emit(msg)
                 except posixmq.QueueError as e:
+                    self.signals.error.emit(e) # TODO: as the docstring says
                     print("Exception")
             else:
                 time.sleep(0.01) # CPU usage, be gone
@@ -101,13 +101,11 @@ class Bunnysplit(QObject):
     current_time_changed = Signal(name="currentTimeChanged") # TODO: unique the signals, dont always send everything, where it isnt necessary
 
     def emit_signal(self):
-        # print("Emitting self.__dict__")
         self.updated.emit(self)
         self.current_time_changed.emit()
 
     # TODO: https://doc.qt.io/qtforpython/PySide6/QtCore/Property.html
     @Property(str, notify=current_time_changed)
-    # @Property(float, notify=current_time_changed)
     def curr_time_getter(self):
         # return self.curr_time.total_seconds()
         return Utils.timedelta_to_timestring(self.curr_time)
@@ -138,6 +136,7 @@ class Bunnysplit(QObject):
     def timer_state_getter(self):
         return self.timer_started
 
+    # noinspection PyTypeChecker
     @Property("QVariantMap", notify=current_time_changed)
     def split_data(self) -> dict:
         """
@@ -181,7 +180,7 @@ class Bunnysplit(QObject):
         self.curr_time = datetime.timedelta()
         self.curr_split = 0
         self.already_visited_maps = []
-        self.filename = "splits/splits.;example.json"
+        self.filename = "splits/splits.example.json"
         self.splits_data = None
 
         self.open_split_file()
@@ -223,7 +222,8 @@ class Bunnysplit(QObject):
 
         for split in self.splits_data.splits:
             split.delta = 0 # reset the delta for all of them.
-
+            split.time_this_run = datetime.timedelta(0) # reset time_this_run, since we've reset the run
+            split.time_this_run_str = ""  # reset time_this_run, since we've reset the run
 
     def split(self, finish=False):
         # Temporarily save off the current literal time.
@@ -256,10 +256,13 @@ class Bunnysplit(QObject):
     def open_split_file(self):
         if self.timer_started:
             return
-
-        with open(self.filename) as f:
-            self.splits_data = Splits.from_json(f.read())
-            self.check_empty_splits()
+        try:
+            with open(self.filename) as f:
+                self.splits_data = Splits.from_json(f.read())
+                self.check_empty_splits()
+        except FileNotFoundError as e:
+            print(f"File does not exist. {e}")
+            sys.exit(1)
 
         self.emit_signal()
 
@@ -294,7 +297,7 @@ class Bunnysplit(QObject):
             json.dump(splits_data_dict, f, indent=4)
 
         # Finally, set the new data that we've just saved as the current splits_data
-        self.splits_data = Splits.from_dict(splits_data_dict)
+        # self.splits_data = Splits.from_dict(splits_data_dict)
 
 
     def finish_run(self):
@@ -312,6 +315,7 @@ class Bunnysplit(QObject):
 
         elif event_type == EventType.MAPCHANGE.value:
             mapname = Utils.parse_mapname(data)
+            # TODO: This is broken, splitting does not work correctly upon starting a run.
             # print(f"DEBUG2: Mapname got = {mapname}")
             # print(f"{self.curr_split} | {len(self.splits_data.splits)} | {self.already_visited_maps}")
 

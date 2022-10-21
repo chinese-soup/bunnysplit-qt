@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from dataclass_wizard import JSONWizard, json_field
 from PySide6.QtCore import QObject
 import datetime
-
+from utils import Utils
 
 @dataclass
 class Split(QObject):
@@ -16,6 +16,7 @@ class Split(QObject):
     identifier: int = json_field("identifier", default_factory=count().__next__, dump=False)
     delta: float = json_field("delta", default=0, dump=False)
     time_this_run: datetime.timedelta = json_field("time_this_run", default=datetime.timedelta(), dump=False)
+    time_this_run_str: str = json_field("time_this_run_str", default="", dump=False) # thanks, Qt
 
 
 @dataclass

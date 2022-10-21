@@ -25,7 +25,7 @@ Rectangle {
             font.pixelSize: 16
 
             Layout.fillHeight: true
-            Layout.preferredWidth: 100
+            Layout.preferredWidth: 200
             /*background: Rectangle
             {
                 color:  { if (title === "ba_maint") { return 'black' } else { return 'white' } }
@@ -39,8 +39,9 @@ Rectangle {
             text: delta
             font.pixelSize: 16
 
-            Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.preferredWidth: 50
         }
         Label {
             id: best_time_text
@@ -48,8 +49,9 @@ Rectangle {
             text: best_time
             font.pixelSize: 16
 
-            Layout.fillWidth: true
+            Layout.preferredWidth: 100
             Layout.fillHeight: true
+            Layout.fillWidth: true
         }
 
     }

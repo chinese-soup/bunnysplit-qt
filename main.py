@@ -28,7 +28,7 @@ from PySide6.QtCore import QDir, QUrl
 # Local
 from const import EventType, MessageType
 from splits import Splits
-
+from utils import Utils
 
 class WorkerSignals(QObject):
     """
@@ -70,7 +70,7 @@ class Worker(QRunnable):
     @Slot()  # QtCore.Slot
     def run(self):
         """
-        Your code goes in this function
+        our code goes in this function
         """
         try:
             q1 = posixmq.Queue("/BunnymodXT-BunnySplit", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
@@ -102,7 +102,7 @@ class Bunnysplit(QObject):
 
     def emit_signal(self):
         # print("Emitting self.__dict__")
-        # self.updated.emit(self)
+        self.updated.emit(self)
         self.current_time_changed.emit()
 
     # TODO: https://doc.qt.io/qtforpython/PySide6/QtCore/Property.html
@@ -110,9 +110,9 @@ class Bunnysplit(QObject):
     # @Property(float, notify=current_time_changed)
     def curr_time_getter(self):
         # return self.curr_time.total_seconds()
-        return self.timedelta_to_timestring(self.curr_time)
+        return Utils.timedelta_to_timestring(self.curr_time)
 
-    @Property(int, notify=current_time_changed)  # TODO: THIS ISNT FLOAT WTF
+    @Property(int, notify=current_time_changed)
     def curr_split_index_getter(self):
         if self.timer_started:
             return self.curr_split
@@ -130,7 +130,7 @@ class Bunnysplit(QObject):
             current_time_td = self.curr_time
             current_split_obj = self.splits_data.splits[self.curr_split]
 
-            current_split_delta = current_time_td - self.timestring_to_timedelta(current_split_obj.split_time)  # TODO: . BEST TIME ETC.???
+            current_split_delta = current_time_td - Utils.timestring_to_timedelta(current_split_obj.split_time)  # TODO: . BEST TIME ETC.???
 
             return current_split_delta.total_seconds()
 
@@ -139,10 +139,19 @@ class Bunnysplit(QObject):
         return self.timer_started
 
     @Property("QVariantMap", notify=current_time_changed)
-    def split_data(self):
-        # split_data = {"title": self.splits_data.title,
-        #              "category": self.splits_data.category}
-        return self.splits_data.__dict__ # TODO: ← & ↑ combine, this is here for a breakpoint lul
+    def split_data(self) -> dict:
+        """
+        This is here because QML can't into natively accessing Python class attributes...
+        This is all awful, but whatever, life's too short.
+        :return: Splits data as a dictionary
+        """
+
+        splits_data_dict = self.splits_data.__dict__
+        for i in splits_data_dict["splits"]:
+            if i.time_this_run != datetime.timedelta(0):
+                i.time_this_run_str = Utils.timedelta_to_timestring(i.time_this_run)
+
+        return splits_data_dict
 
     # @Property(list)
     # @Slot(result="QVariantList")
@@ -166,70 +175,18 @@ class Bunnysplit(QObject):
 
     name = Property(str, json_filename, notify=filename_changed)
 
-    def check_empty_splits(self):
-        for split in self.splits_data.splits:
-            if self.timestring_to_timedelta(split.split_time) == datetime.timedelta(0):
-                split.split_time = "99:99.0000000"  # Set the split_time to None
-            else:
-                pass
-
-    def open_split_file(self):
-        if self.timer_started:
-            return
-
-        with open(self.filename) as f:
-            self.splits_data = Splits.from_json(f.read())
-            self.check_empty_splits()
-
-        self.emit_signal()
-
     def __init__(self):
         super().__init__()
         self.timer_started = False
         self.curr_time = datetime.timedelta()
         self.curr_split = 0
         self.already_visited_maps = []
-        self.filename = "splits/splits.hl.json"
+        self.filename = "splits/splits.;example.json"
         self.splits_data = None
 
         self.open_split_file()
 
         self.emit_signal()
-
-    @staticmethod
-    def timedelta_to_timestring(orig_timedelta) -> str:
-        """
-        Converts timedelta to string time for use in the JSON splits file
-        TODO: make static and gtfo Bunnysplit class
-        :return: String in the format of "MM:SS.f" f = milliseconds
-        """
-        time_obj = (datetime.datetime.min + orig_timedelta).time()
-        timestring = datetime.time.strftime(time_obj, "%M:%S.%f")
-        return timestring
-
-    @staticmethod
-    def timestring_to_timedelta(orig_time) -> datetime.timedelta:
-        """
-        Converts string time to timedelta
-        TODO: make static and gtfo Bunnysplit class
-        :return: datetime.timedelta object representing the original string time
-        """
-        # orig_time = "04:02.934"
-        try:
-            dt_parsed = datetime.datetime.strptime(orig_time, '%M:%S.%f').time()
-            ms = dt_parsed.microsecond / 1000
-            delta_obj = datetime.timedelta(hours=dt_parsed.hour,
-                                           minutes=dt_parsed.minute,
-                                           seconds=dt_parsed.second,
-                                           milliseconds=ms)
-        except ValueError:
-            delta_obj = datetime.timedelta(0)
-
-        if delta_obj == datetime.timedelta(0):
-            print(delta_obj)
-            print(delta_obj.total_seconds())
-
-        return delta_obj
 
     def parse_message(self, data: bytes):
         """
@@ -244,10 +201,10 @@ class Bunnysplit(QObject):
         # print(f"DEBUG: Already visited maps: {self.already_visited_maps}")
 
         if data[1] == MessageType.TIME.value:
-            self.parse_time(data, 2)
+            self.curr_time = Utils.parse_time(data, 2)
 
         elif data[1] == MessageType.EVENT.value:
-            self.parse_time(data, 3)
+            self.curr_time = Utils.parse_time(data, 3)
             self.parse_event(data)
 
         else:
@@ -274,7 +231,7 @@ class Bunnysplit(QObject):
         current_time_sec = current_time_td.total_seconds()
         current_split_obj = self.splits_data.splits[self.curr_split]
 
-        current_split_delta = current_time_td - self.timestring_to_timedelta(current_split_obj.split_time) # TODO: . BEST TIME ETC.???
+        current_split_delta = current_time_td - Utils.timestring_to_timedelta(current_split_obj.split_time) # TODO: . BEST TIME ETC.???
 
         self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
         self.splits_data.splits[self.curr_split].time_this_run = current_time_td
@@ -289,12 +246,29 @@ class Bunnysplit(QObject):
         else:
             self.curr_split += 1
 
+    def check_empty_splits(self):
+        for split in self.splits_data.splits:
+            if Utils.timestring_to_timedelta(split.split_time) == datetime.timedelta(0):
+                split.split_time = "99:99:99.0000000"  # Set the split_time to None
+            else:
+                pass
+
+    def open_split_file(self):
+        if self.timer_started:
+            return
+
+        with open(self.filename) as f:
+            self.splits_data = Splits.from_json(f.read())
+            self.check_empty_splits()
+
+        self.emit_signal()
+
+
     def is_this_pb_run(self):
-        if self.splits_data.splits[-1].time_this_run < self.timestring_to_timedelta(self.splits_data.splits[-1].split_time):
+        if self.splits_data.splits[-1].time_this_run < Utils.timestring_to_timedelta(self.splits_data.splits[-1].split_time):
             return True
 
         return False
-
 
     def save_finished_run(self):
         """
@@ -308,9 +282,9 @@ class Bunnysplit(QObject):
         is_pb_run = self.is_this_pb_run()
 
         for split in self.splits_data.splits:
-            best_time_td = self.timestring_to_timedelta(split.split_time)
+            best_time_td = Utils.timestring_to_timedelta(split.split_time)
             if is_pb_run:
-                split.split_time = self.timedelta_to_timestring(split.time_this_run)
+                split.split_time = Utils.timedelta_to_timestring(split.time_this_run)
 
 
         splits_data_dict = self.splits_data.to_dict()
@@ -337,7 +311,7 @@ class Bunnysplit(QObject):
                 self.split(finish=True)
 
         elif event_type == EventType.MAPCHANGE.value:
-            mapname = self.parse_mapname(data)
+            mapname = Utils.parse_mapname(data)
             # print(f"DEBUG2: Mapname got = {mapname}")
             # print(f"{self.curr_split} | {len(self.splits_data.splits)} | {self.already_visited_maps}")
 
@@ -370,27 +344,8 @@ class Bunnysplit(QObject):
             if "ba_teleport2" in self.already_visited_maps:
                 self.split()
 
-    @staticmethod
-    def parse_mapname(data):
-        """
-        Parses the mapname from the `data` of an event
-        :param data: event's data
-        :return:
-        """
-        length = struct.unpack('<I', data[11:15])[0]
-        mapname = data[15:15 + length].decode("utf-8")
-        return mapname
-
-    def parse_time(self, data: bytes, offset: int): # TODO: should be static and return instead of setting self.curr_time?
-        hours = struct.unpack('<I', data[offset:offset + 4])[0]
-        minutes = data[offset + 4]
-        seconds = data[offset + 5]
-        milliseconds = struct.unpack('<H', data[offset + 6:offset + 8])[0]
-        self.curr_time = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
-
 if __name__ == "__main__":
     bsp = Bunnysplit()
-    bsp.save_finished_run()
 
     QQuickStyle.setStyle("Material")
     app = QApplication(sys.argv)

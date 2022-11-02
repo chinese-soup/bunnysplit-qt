@@ -4,18 +4,11 @@ import sys
 import datetime
 import time
 
-# IPC-related # TODO: fix up imports here
-import ipcqueue.posixmq
-from ipcqueue.serializers import RawSerializer
-from ipcqueue import posixmq
-
 # Parsing
 import json
-import struct
-
-# Qt bullshit x
 from pathlib import Path
 
+# Qt stuff
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -28,77 +21,12 @@ from PySide6.QtCore import QDir, QUrl
 from const import EventType, MessageType
 from splits import Splits
 from utils import Utils
-
-class WorkerSignals(QObject):
-    """
-    Defines the signals available from a running worker thread.
-
-    Supported signals are:
-
-    finished
-        No data
-
-    error
-        tuple (exctype, value, traceback.format_exc() )
-
-    result
-        object data returned from processing, anything
-
-    """
-    finished = Signal()  # QtCore.Signal
-    error = Signal(tuple)
-    result = Signal(object)
-
-
-# noinspection PyUnresolvedReferences
-class Worker(QRunnable):
-    """
-    Worker thread for the BXT message queue
-    """
-    def __init__(self, *args, **kwargs):
-        super(Worker, self).__init__()
-        # Store constructor arguments (re-used for processing)
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-        self.should_stop = False
-
-    def stop_queue(self, stop_or_not):
-        self.should_stop = stop_or_not
-
-    @Slot()  # QtCore.Slot
-    def run(self):
-        """
-        Worker thread for the Message Queue
-        """
-        try:
-            q1 = posixmq.Queue("/BunnymodXT-BunnySplit", serializer=RawSerializer, maxsize=8192, maxmsgsize=8192)
-        except ipcqueue.posixmq.QueueError:
-            print("Couldn't open the message queue. Is a BXT game running?")
-            return
-
-        while True:
-            if self.should_stop:
-                # TODO: Is this ↓ useful? Are we going to stop the MQ manually any other time than on quitting the app?
-                self.should_stop = not self.should_stop
-                break
-
-            if q1.qsize() > 0:
-                try:
-                    msg = q1.get_nowait()
-                    bsp.parse_message(msg)
-                    self.signals.result.emit(msg)
-                except posixmq.QueueError as e:
-                    self.signals.error.emit(e) # TODO: as the docstring says
-                    print("Exception")
-            else:
-                time.sleep(0.01) # CPU usage, be gone
-
+from mq_worker import Worker, WorkerSignals
 
 # noinspection PyUnresolvedReferences
 class Bunnysplit(QObject):
     updated = Signal(QObject)
-    current_time_changed = Signal(name="currentTimeChanged") # TODO: unique the signals, dont always send everything, where it isnt necessary
+    current_time_changed = Signal(name="currentTimeChanged")  # TODO: unique the signals, dont always send everything, where it isnt necessary
 
     def emit_signal(self):
         self.updated.emit(self)
@@ -112,13 +40,12 @@ class Bunnysplit(QObject):
 
     @Property(int, notify=current_time_changed)
     def curr_split_index_getter(self):
-        if self.timer_started:
-            return self.curr_split
-        else:
+        if not self.timer_started:
             return -1
+        return self.curr_split
 
     @Property(float, notify=current_time_changed)
-    def curr_split_delta_getter(self):
+    def curr_split_delta_getter(self) -> float:
         """
         TODO: Should I use this? Or should I just set the .delta for the current split every frame,
         TODO: i mean that's what's happening here anyway, but might as well do it outside of the Property?
@@ -132,8 +59,8 @@ class Bunnysplit(QObject):
 
             return current_split_delta.total_seconds()
 
-    @Property(bool, notify=current_time_changed) # TODO: int (enum)
-    def timer_state_getter(self):
+    @Property(bool, notify=current_time_changed)  # TODO: int (enum)
+    def timer_state_getter(self) -> bool:
         return self.timer_started
 
     # noinspection PyTypeChecker
@@ -154,8 +81,9 @@ class Bunnysplit(QObject):
 
     # @Property(list)
     # @Slot(result="QVariantList")
+    # noinspection PyTypeChecker
     @Property("QVariantList", notify=current_time_changed)
-    def get_splits(self):
+    def get_splits(self) -> list:
         splits_as_list = [x.__dict__ for x in self.splits_data.splits]
         return splits_as_list  # TODO: ← & ↑ combine, this is here for a breakpoint lul
 
@@ -176,18 +104,19 @@ class Bunnysplit(QObject):
 
     def __init__(self):
         super().__init__()
+        # Initialize variables
         self.timer_started = False
         self.curr_time = datetime.timedelta()
         self.curr_split = 0
         self.already_visited_maps = []
         self.filename = "splits/splits.example.json"
         self.splits_data = None
+        self.run_finished = True
 
-        self.open_split_file()
-
+        self.open_split_file()  # Open the split file
         self.emit_signal()
 
-    def parse_message(self, data: bytes):
+    def parse_message(self, data: bytes) -> None:
         """
         Parse the received message from MQ
         :param data: message's content (in bytes)
@@ -215,15 +144,15 @@ class Bunnysplit(QObject):
         self.curr_time = datetime.timedelta(seconds=0)
         self.curr_split = 0
         self.timer_started = False  # TODO: should be state enum or someshit, probably
-        self.already_visited_maps = [] #.clear()
-        self.run_finished = False # TODO: repalce with enum timer_state?
+        self.already_visited_maps = []
+        self.run_finished = False  # TODO: repalce with enum timer_state?
 
         self.splits_data.attempt_count += 1
 
         for split in self.splits_data.splits:
-            split.delta = 0 # reset the delta for all of them.
-            split.time_this_run = datetime.timedelta(0) # reset time_this_run, since we've reset the run
-            split.time_this_run_str = ""  # reset time_this_run, since we've reset the run
+            split.delta = 0  # reset the delta for all of them.
+            split.time_this_run = datetime.timedelta(0)  # reset time_this_run, since we've reset the run
+            split.time_this_run_str = ""  # reset time_this_run_str, since we've reset the run
 
     def split(self, finish=False):
         # Temporarily save off the current literal time.
@@ -231,7 +160,7 @@ class Bunnysplit(QObject):
         current_time_sec = current_time_td.total_seconds()
         current_split_obj = self.splits_data.splits[self.curr_split]
 
-        current_split_delta = current_time_td - Utils.timestring_to_timedelta(current_split_obj.split_time) # TODO: . BEST TIME ETC.???
+        current_split_delta = current_time_td - Utils.timestring_to_timedelta(current_split_obj.split_time)  # TODO: . BEST TIME ETC.???
 
         self.already_visited_maps.append(self.splits_data.splits[self.curr_split].title)
         self.splits_data.splits[self.curr_split].time_this_run = current_time_td
@@ -266,7 +195,6 @@ class Bunnysplit(QObject):
 
         self.emit_signal()
 
-
     def is_this_pb_run(self):
         if self.splits_data.splits[-1].time_this_run < Utils.timestring_to_timedelta(self.splits_data.splits[-1].split_time):
             return True
@@ -277,7 +205,6 @@ class Bunnysplit(QObject):
         """
         Serialize the finished run split data and save it to a file
         TODO: best time / best segment stuff
-        :param is_pb_run:
         :return:
         """
 
@@ -289,22 +216,18 @@ class Bunnysplit(QObject):
             if is_pb_run:
                 split.split_time = Utils.timedelta_to_timestring(split.time_this_run)
 
-
         splits_data_dict = self.splits_data.to_dict()
-        splits_list = splits_data_dict["splits"]
 
-        with open ("splits/splits.{}.json".format(time.time()), "w") as f:
+        with open("splits/splits.{}.json".format(time.time()), "w") as f:
             json.dump(splits_data_dict, f, indent=4)
 
         # Finally, set the new data that we've just saved as the current splits_data
         # self.splits_data = Splits.from_dict(splits_data_dict)
 
-
     def finish_run(self):
         self.run_finished = True
         self.curr_split = 0
         self.timer_started = False
-
 
     def parse_event(self, data: bytes):
         event_type = data[2]
@@ -337,7 +260,7 @@ class Bunnysplit(QObject):
             print(self.already_visited_maps)
 
         elif event_type == EventType.TIMER_RESET.value:
-            self.reset_timer() # TOOD: Reload the JSON file?
+            self.reset_timer()  # TOOD: Reload the JSON file?
 
         elif event_type == EventType.TIMER_START.value:
             print("Timer started")
@@ -348,6 +271,7 @@ class Bunnysplit(QObject):
             if "ba_teleport2" in self.already_visited_maps:
                 self.split()
 
+
 if __name__ == "__main__":
     bsp = Bunnysplit()
 
@@ -356,7 +280,7 @@ if __name__ == "__main__":
     # app = QGuiApplication(sys.argv)
 
     engine = QQmlApplicationEngine()
-    qml_file = str(Path(__file__).resolve().parent / "main.qml")
+    qml_file = str(Path(__file__).resolve().parent / "ui/main.qml")
     engine.load(qml_file)
 
     # Define our backend object, which we pass to QML.

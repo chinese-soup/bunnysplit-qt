@@ -117,7 +117,17 @@ ColumnLayout {
                // TODO: FIX
                //delta: backend.curr_split_index_getter == index ? backend.curr_split_delta_getter : (modelData.delta > 0 ? "+" + modelData.delta : modelData.delta)
                delta: last_split_obj.delta > 0 ? "+" + last_split_obj.delta : last_split_obj.delta
-               best_time: last_split_obj.split_time
+               best_time:
+               {
+                    if (last_split_obj.time_this_run_str !== '')
+                    {
+                        return last_split_obj.time_this_run_str
+                    }
+                    else
+                    {
+                        return last_split_obj.split_time
+                    }
+               }
                is_current_split: backend.curr_split_index_getter === fake_index
                z: 20
            }

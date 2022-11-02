@@ -1,6 +1,7 @@
 import datetime
 import struct
 
+
 class Utils:
     @staticmethod
     def parse_mapname(data):
@@ -14,13 +15,12 @@ class Utils:
         return mapname
 
     @staticmethod
-    def parse_time(data: bytes, offset: int): # TODO: should be static and return instead of setting self.curr_time?
+    def parse_time(data: bytes, offset: int):  # TODO: should be static and return instead of setting self.curr_time?
         hours = struct.unpack('<I', data[offset:offset + 4])[0]
         minutes = data[offset + 4]
         seconds = data[offset + 5]
         milliseconds = struct.unpack('<H', data[offset + 6:offset + 8])[0]
         return datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
-
 
     @staticmethod
     def timedelta_to_timestring(orig_timedelta) -> str:

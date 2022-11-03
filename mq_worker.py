@@ -43,11 +43,11 @@ class Worker(QRunnable):
         self.signals = WorkerSignals()
         self.should_stop = False
 
-    def stop_queue(self, stop_or_not):
+    def stop_queue(self, stop_or_not) -> None:
         self.should_stop = stop_or_not
 
     @Slot()  # QtCore.Slot
-    def run(self):
+    def run(self) -> None:
         """
         Worker thread for the Message Queue
         """

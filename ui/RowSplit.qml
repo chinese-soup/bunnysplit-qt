@@ -25,7 +25,7 @@ Rectangle {
             font.pixelSize: 16
 
             Layout.fillHeight: true
-            Layout.preferredWidth: 200
+            Layout.preferredWidth: 150
             /*background: Rectangle
             {
                 color:  { if (title === "ba_maint") { return 'black' } else { return 'white' } }
@@ -36,12 +36,12 @@ Rectangle {
             id: curr_time_text
             font.bold: false
             color: delta > 0 ? "red" : "green"
-            text: delta
+            text: delta === 0 ? "bla" : delta
             font.pixelSize: 16
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Layout.preferredWidth: 50
+            Layout.preferredWidth: 100
         }
         Label {
             id: best_time_text
